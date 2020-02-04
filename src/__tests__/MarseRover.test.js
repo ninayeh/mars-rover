@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import Rover from '../Rover'
+import Rover from '../MarseRover'
 
 describe('Implement boundaries of map', () => {
   it('should assign map size', () => {

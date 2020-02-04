@@ -1,5 +1,5 @@
 import React from 'react';
-import Rover from './RoverA';
+import Rover from './Rover';
 
 const RIGHT_TURNS_MAP = {
   N: "E",
@@ -18,7 +18,7 @@ const LEFT_TURNS_MAP = {
 class App extends React.Component {
   state = {
     start: '0 0 N',
-    grid: [5, 5],
+    grid: '5 5',
     commands: '',
     execute: false,
     end:''
@@ -27,7 +27,7 @@ class App extends React.Component {
   execute = () => {
     let start = this.startInput.value;
     let commands = this.commandsInput.value;
-    if (/^[0-9]\s[0-9]\s[NEWS]$/.test(start)) {
+    if (/^[0-9]\s[0-9]\s[NEWS]$/.test(start) && /[LMR]/.test(commands)) {
         this.setState({
             execute: true,
             commands,
@@ -63,17 +63,20 @@ class App extends React.Component {
        } else if (command === 'R' || command === 'L') {
         currentFacing = this.turn(command, currentFacing);
         console.log(currentFacing)
-      }  
+      }  else  {
+        alert('Invalid commands, press button to continue')
+      }
     }
     this.formatResult(currentLocation, currentFacing);
     
   }
 
   moveRover = (clocation, facing) => {
-
     let xIncrease = 0;
     let yIncrease = 0;
-    const grid = this.state.grid
+    let grid = this.state.grid
+    grid = grid.split(' ').map(Number);
+
     if (facing === 'N' && clocation[1] < grid[1]) {
       yIncrease = 1;
     } else if (facing === 'S' &&  clocation[1] > 0) { 
@@ -85,7 +88,6 @@ class App extends React.Component {
     } 
 
     clocation =  [clocation[0] + xIncrease, clocation[1] + yIncrease]
-    console.log(clocation)
     return clocation
   
   }
@@ -111,7 +113,23 @@ class App extends React.Component {
     return (
       <div className="container">
         <div className="mt-5">
-        <h1>Input Component</h1>
+          <h1>Problem - Mars Rover</h1>
+          <div className="gridSize  my-3">
+              <label htmlFor="gridSize">
+                  Grid Size:
+              </label>
+              <input type="text"
+                      id="gridSize"
+                      required
+                      className="form-control"
+                      pattern= {/\d*/}
+                      defaultValue={this.state.grid}
+                      ref={(elm) => {
+                          this.startInput = elm
+                      }}
+              />
+          </div>
+        
           <div className="startPosition  my-3">
               <label htmlFor="startPosition">
                   Start Position (Eg: 0 0 N):
@@ -144,8 +162,9 @@ class App extends React.Component {
                           this.commandsInput = elm
                       }}
               />
-   
+              <small id="commandsHelp" class="form-text text-muted">Wrong command will be  ignored</small>
           </div>
+          
           <button className='btn btn-primary' onClick={this.execute}>Execute</button>
         </div>
         <Rover 
