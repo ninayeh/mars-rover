@@ -1,37 +1,111 @@
 import React from 'react';
 import Rover from './RoverA';
 
+const RIGHT_TURNS_MAP = {
+  N: "E",
+  E: "S",
+  S: "W",
+  W: "N"
+};
+
+const LEFT_TURNS_MAP = {
+  N: "W",
+  W: "S",
+  S: "E",
+  E: "N"
+};
 
 class App extends React.Component {
   state = {
-    initialPosition: '0 0 N',
+    start: '0 0 N',
     grid: [5, 5],
+    commands: '',
     execute: false,
-    commands: ''
+    end:''
   }
 
   execute = () => {
-    let initialPosition = this.startInput.value;
-    if (/^[0-9]\s[0-9]\s[NEWS]$/.test(initialPosition)) {
+    let start = this.startInput.value;
+    let commands = this.commandsInput.value;
+    if (/^[0-9]\s[0-9]\s[NEWS]$/.test(start)) {
         this.setState({
             execute: true,
-            commands: this.commandsInput.value,
-            initialPosition
-        });
+            commands,
+            start
+        }, () => {
+          this.processLocation()
+        } 
+        );
         
     } else {
-        alert('Invalid start position.');
+        alert('Invalid start position or commands.');
     }
   };
 
-  clear = () => {
-    this.setState({
-      initialPosition: '',
-      grid: [5, 5],
-      execute: false,
-      commands: ''
-    });
+  processLocation = () => {
+    let start = this.state.start
+    let location = start.split(' ',2).map(Number);
+    let facing = start.split(' ').slice(-1)[0];
+    this.processCommands(location, facing)
+  }
+
+  processCommands = (location, facing) => {
+    let commandsArray = this.state.commands.split('');
+    let currentLocation = location
+    let currentFacing = facing
+
+    for(let index = 0; index < commandsArray.length; index++) {
+      let command = commandsArray[index];
+      
+      if (command === 'M') {
+        currentLocation = this.moveRover(currentLocation, currentFacing);
+        
+       } else if (command === 'R' || command === 'L') {
+        currentFacing = this.turn(command, currentFacing);
+        console.log(currentFacing)
+      }  
+    }
+    this.formatResult(currentLocation, currentFacing);
+    
+  }
+
+  moveRover = (clocation, facing) => {
+
+    let xIncrease = 0;
+    let yIncrease = 0;
+    const grid = this.state.grid
+    if (facing === 'N' && clocation[1] < grid[1]) {
+      yIncrease = 1;
+    } else if (facing === 'S' &&  clocation[1] > 0) { 
+      yIncrease = -1;
+    } else if (facing === 'E' && clocation[0] < grid[0] ) { 
+      xIncrease = 1;
+    } else if (facing === 'W' && clocation[0] > 0 ) { 
+      xIncrease = -1;
+    } 
+
+    clocation =  [clocation[0] + xIncrease, clocation[1] + yIncrease]
+    console.log(clocation)
+    return clocation
+  
+  }
+
+  turn(command, currentFacing) {
+    if (command === 'R') {
+      return currentFacing =  RIGHT_TURNS_MAP[currentFacing]
+    } else {
+      return currentFacing =  LEFT_TURNS_MAP[currentFacing]
+    }
   };
+
+  formatResult(currentLocation, currentFacing) {
+    let space = ' '; 
+    let end = currentLocation.join(' ') + space + currentFacing
+    this.setState({
+      end
+    })
+
+  }
 
   render() {
     return (
@@ -48,7 +122,7 @@ class App extends React.Component {
                       required
                       className="form-control"
                       pattern= {/^[0-9]\s[0-9]\s[NEWS]$/}
-                      defaultValue={this.state.initialPosition}
+                      defaultValue={this.state.start}
                       onBlur={this.validateStartPosition}
                       ref={(elm) => {
                           this.startInput = elm
@@ -64,7 +138,7 @@ class App extends React.Component {
                       maxLength={10}
                       required
                       className="form-control"
-                      pattern={'^[MRL]$'}
+                      
                       defaultValue={'MMR'}                
                       ref={(elm) => {
                           this.commandsInput = elm
@@ -73,13 +147,9 @@ class App extends React.Component {
    
           </div>
           <button className='btn btn-primary' onClick={this.execute}>Execute</button>
-          {/* <button className='btn btn-primary' onClick={this.clear} >Clear</button> */}
         </div>
         <Rover 
-          grid={this.state.grid} 
-          initialPosition={this.state.initialPosition} 
-          commands={this.state.commands}
-          
+          endLocation={this.state.end} 
         />
       </div>
      
